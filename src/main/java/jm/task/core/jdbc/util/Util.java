@@ -1,6 +1,7 @@
 package jm.task.core.jdbc.util;
 
 import jm.task.core.jdbc.model.User;
+import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
@@ -22,61 +23,59 @@ public class Util {
 
     private static Connection connection;
 
-    private static final String USERNAME = "root";
-    private static final String PASSWORD = "Akylbekovaai.1998@";
-    private static final String URL="jdbc:mysql://localhost:3306/mydb";
+    private static final String username = "root";
+    private static final String password = "Akylbekovaai.1998@";
+    private static final String url="jdbc:mysql://localhost:3306/mydb";
 
-    private static final String DRIVER = "com.mysql.cj.jdbc.Driver";
-    private Util() {
-    }
+    private static final String driver = "com.mysql.cj.jdbc.Driver";
 
-    public static Connection getConnection() {
-
-        try {
-            if( connection == null || connection.isClosed()) {
-                Class.forName(DRIVER);
-                connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
-                System.out.println("Connection Ok");
-            }
-        } catch (ClassNotFoundException | SQLException e) {
-            e.printStackTrace();
-            System.out.println("Connection error");
-        }
-        return connection;
-    }
 
     private static SessionFactory sessionFactory;
 
     public static SessionFactory getSessionFactory() {
-
-        if (sessionFactory == null) {
-            try {
-                Configuration configuration = new Configuration().addAnnotatedClass(User.class).addAnnotatedClass(AutoCloseable.class);
-
-                Properties settings = new Properties();
-
-                settings.put(Environment.DRIVER, "com.mysql.cj.jdbc.Driver");
-                settings.put(Environment.URL, "url");
-                settings.put(Environment.USER, "username");
-                settings.put(Environment.PASS, "password");
-                settings.put(Environment.DIALECT, "org.hibernate.dialect.MySQL5Dialect");
-                settings.put(Environment.SHOW_SQL, "true");
-                settings.put(Environment.CURRENT_SESSION_CONTEXT_CLASS, "thread");
-                settings.put(Environment.HBM2DDL_AUTO, "update");
-
-                configuration.setProperties(settings);
-                configuration.addAnnotatedClass(User.class);
-
-                ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
-                        .applySettings(configuration.getProperties()).build();
-
-                sessionFactory = configuration.buildSessionFactory();
-            } catch (Exception ignored) {
-
-            }
+        if (sessionFactory != null) {
+            return sessionFactory;
         }
+        Properties properties = new Properties();
+
+        properties.put(Environment.DRIVER, driver);
+        properties.put(Environment.URL, url);
+        properties.put(Environment.USER, username);
+        properties.put(Environment.PASS, password);
+        properties.put(Environment.DIALECT, "org.hibernate.dialect.MySQL5Dialect");
+        properties.put(Environment.CURRENT_SESSION_CONTEXT_CLASS, "thread");
+        properties.put(Environment.SHOW_SQL, "true");
+        properties.put(Environment.HBM2DDL_AUTO, "");
+
+        sessionFactory = new Configuration()
+                .setProperties(properties)
+                .addAnnotatedClass(User.class)
+                .buildSessionFactory();
+
         return sessionFactory;
     }
 
+    public static void closeSF() {
+        try {
+            sessionFactory.close();
+        } catch (HibernateException e) {
+            e.printStackTrace();
+        }
+    }
+    public static Connection get() {
+        try {
+            Class.forName(driver);
+            return connection = DriverManager.getConnection(url, username, password);
+        } catch (SQLException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
+    public static void close() {
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
