@@ -54,11 +54,11 @@ public class Util {
                 Configuration configuration = new Configuration().addAnnotatedClass(User.class).addAnnotatedClass(AutoCloseable.class);
 
                 Properties settings = new Properties();
-                Properties props = getProps();
+
                 settings.put(Environment.DRIVER, "com.mysql.cj.jdbc.Driver");
-                settings.put(Environment.URL,props.getProperty("url"));
-                settings.put(Environment.USER, props.getProperty("username"));
-                settings.put(Environment.PASS, props.getProperty("password"));
+                settings.put(Environment.URL, "url");
+                settings.put(Environment.USER, "username");
+                settings.put(Environment.PASS, "password");
                 settings.put(Environment.DIALECT, "org.hibernate.dialect.MySQL5Dialect");
                 settings.put(Environment.SHOW_SQL, "true");
                 settings.put(Environment.CURRENT_SESSION_CONTEXT_CLASS, "thread");
@@ -78,13 +78,5 @@ public class Util {
         return sessionFactory;
     }
 
-    private static Properties getProps() throws IOException {
-        Properties props = new Properties();
-        try (InputStream in = Files.newInputStream(Paths.get(Util.class.getResource("/database.properties").toURI()))) {
-            props.load(in);
-            return props;
-        } catch (IOException | URISyntaxException e) {
-            throw new IOException("Database config file not found", e);
-        }
-    }
+
 }
